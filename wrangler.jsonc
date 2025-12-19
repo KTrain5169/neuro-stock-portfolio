@@ -1,0 +1,24 @@
+{
+    "$schema": "./node_modules/wrangler/config-schema.json",
+    "compatibility_date": "2025-12-17",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    "name": "neuro-stock-portfolio",
+    "main": "serverless/index.ts",
+    "assets": {
+        "binding": "ASSETS",
+        "directory": "./dist/client",
+        "not_found_handling": "single-page-application"
+    },
+    "kv_namespaces": [
+        {
+            "binding": "STOCKS_DATA"
+        }
+    ],
+    "triggers": {
+        "crons": [
+            "*/5 * * * *"
+        ]
+    }
+}

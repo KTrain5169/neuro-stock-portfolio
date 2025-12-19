@@ -1,0 +1,48 @@
+{
+    "type": "object",
+    "properties": {
+        "account": {
+            "type": "object",
+            "properties": {
+                "cash": {
+                    "type": "string"
+                },
+                "equity": {
+                    "type": "string"
+                },
+                "portfolioValue": {
+                    "type": "string"
+                },
+                "originalInvestment": {
+                    "type": "number"
+                }
+            }
+        },
+        "history": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "timestamp": {
+                        "type": "number"
+                    },
+                    "equity": {
+                        "type": "number"
+                    },
+                    "change": {
+                        "type": "number"
+                    },
+                    "changePercent": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "positions": {
+            "type": "array"
+        },
+        "activities": {
+            "type": "object"
+        }
+    }
+}
