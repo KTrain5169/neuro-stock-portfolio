@@ -16,11 +16,6 @@
             "binding": "STOCKS_DATA"
         }
     ],
-    "triggers": {
-        "crons": [
-            "*/5 * * * *"
-        ]
-    },
     "observability": {
         "logs": {
             "enabled": true,

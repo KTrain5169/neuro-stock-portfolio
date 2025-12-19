@@ -179,16 +179,5 @@ app.post('/api/refresh', async (c) => {
 export default {
     async fetch(request: Request, env: Env, ctx: ExecutionContext) {
         return app.fetch(request, env, ctx);
-    },
-
-    // Scheduled worker to refresh cache periodically
-    async scheduled(_event: ScheduledController, env: Env, _ctx: ExecutionContext) {
-        try {
-            console.log('Scheduled task: Refreshing stock data...');
-            await fetchAndCacheData(env);
-            console.log('Scheduled task: Data refreshed successfully');
-        } catch (error) {
-            console.error('Scheduled task error:', error);
-        }
     }
 }
