@@ -63,7 +63,7 @@ function formatLastUpdated(timestamp: string | null): string {
     </main>
 
     <footer class="footer">
-      <p>Source code: https://github.com/KTrain5169/neuro-stock-portfolio</p>
+      <p><a href="https://github.com/KTrain5169/neuro-stock-portfolio" target="_blank">Source code</a> | This site is not affiliated with VedalAI.</p>
     </footer>
   </div>
 </template>
