@@ -9,9 +9,9 @@ app.use('/api/*', cors());
 
 // Configuration - Update this URL with your actual GitHub raw URL
 const GITHUB_DATA_URL = process.env.GITHUB_DATA_URL ?? 'https://raw.githubusercontent.com/VedalAI/neuro-stocks-data/refs/heads/main/portfolio.json';
-const CACHE_TTL = 60; // Cache for 60 seconds
+const CACHE_TTL = 86400;
 
-// Fetch and cache stock data from GitHub
+// Fetch and cache stock data from GitHub (only write if changed)
 async function fetchAndCacheData(env: Env): Promise<any> {
     try {
         console.log('Fetching data from GitHub...');
@@ -25,21 +25,37 @@ async function fetchAndCacheData(env: Env): Promise<any> {
 
         // Validate data against schema
         const validatedData = zod_object_schema.parse(data);
+        const newDataString = JSON.stringify(validatedData);
 
-        // Store each category in KV
+        // Check if data has changed before writing to KV
+        const existingData = await env.STOCKS_DATA.get('full_data');
+
+        if (existingData === newDataString) {
+            console.log('Data unchanged, skipping KV writes');
+            return validatedData;
+        }
+
+        console.log('Data changed, updating KV cache');
+
+        // Store each category in KV only if changed
         const categories = ['account', 'history', 'positions', 'activities'] as const;
         await Promise.all(
-            categories.map(category =>
-                env.STOCKS_DATA.put(
-                    category,
-                    JSON.stringify(validatedData[category]),
-                    { expirationTtl: CACHE_TTL }
-                )
-            )
+            categories.map(async category => {
+                const categoryData = JSON.stringify(validatedData[category]);
+                const existingCategoryData = await env.STOCKS_DATA.get(category);
+
+                if (existingCategoryData !== categoryData) {
+                    await env.STOCKS_DATA.put(
+                        category,
+                        categoryData,
+                        { expirationTtl: CACHE_TTL }
+                    );
+                }
+            })
         );
 
         // Store full data and timestamp
-        await env.STOCKS_DATA.put('full_data', JSON.stringify(validatedData), { expirationTtl: CACHE_TTL });
+        await env.STOCKS_DATA.put('full_data', newDataString, { expirationTtl: CACHE_TTL });
         await env.STOCKS_DATA.put('last_updated', new Date().toISOString(), { expirationTtl: CACHE_TTL });
 
         return validatedData;
@@ -68,6 +84,9 @@ app.get('/api/portfolio', async (c) => {
         const data = await getData(c.env);
         const lastUpdated = await c.env.STOCKS_DATA.get('last_updated');
 
+        // Set Cache-Control header with max-age of 60 seconds
+        c.header('Cache-Control', 'public, max-age=60');
+
         return c.json({
             success: true,
             data,
@@ -90,9 +109,11 @@ app.get('/api/account', async (c) => {
             // Trigger cache refresh
             await fetchAndCacheData(c.env);
             const refreshedAccount = await c.env.STOCKS_DATA.get('account');
+            c.header('Cache-Control', 'public, max-age=60');
             return c.json({ success: true, data: JSON.parse(refreshedAccount!) });
         }
 
+        c.header('Cache-Control', 'public, max-age=60');
         return c.json({ success: true, data: JSON.parse(account) });
     } catch (error) {
         return c.json({
@@ -109,9 +130,11 @@ app.get('/api/history', async (c) => {
         if (!history) {
             await fetchAndCacheData(c.env);
             const refreshedHistory = await c.env.STOCKS_DATA.get('history');
+            c.header('Cache-Control', 'public, max-age=60');
             return c.json({ success: true, data: JSON.parse(refreshedHistory!) });
         }
 
+        c.header('Cache-Control', 'public, max-age=60');
         return c.json({ success: true, data: JSON.parse(history) });
     } catch (error) {
         return c.json({
@@ -128,9 +151,11 @@ app.get('/api/positions', async (c) => {
         if (!positions) {
             await fetchAndCacheData(c.env);
             const refreshedPositions = await c.env.STOCKS_DATA.get('positions');
+            c.header('Cache-Control', 'public, max-age=60');
             return c.json({ success: true, data: JSON.parse(refreshedPositions!) });
         }
 
+        c.header('Cache-Control', 'public, max-age=60');
         return c.json({ success: true, data: JSON.parse(positions) });
     } catch (error) {
         return c.json({
@@ -147,9 +172,11 @@ app.get('/api/activities', async (c) => {
         if (!activities) {
             await fetchAndCacheData(c.env);
             const refreshedActivities = await c.env.STOCKS_DATA.get('activities');
+            c.header('Cache-Control', 'public, max-age=60');
             return c.json({ success: true, data: JSON.parse(refreshedActivities!) });
         }
 
+        c.header('Cache-Control', 'public, max-age=60');
         return c.json({ success: true, data: JSON.parse(activities) });
     } catch (error) {
         return c.json({
@@ -163,6 +190,7 @@ app.get('/api/activities', async (c) => {
 app.post('/api/refresh', async (c) => {
     try {
         const data = await fetchAndCacheData(c.env);
+        c.header('Cache-Control', 'no-cache');
         return c.json({
             success: true,
             message: 'Data refreshed successfully',
