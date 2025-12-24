@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import AccountSummary from './components/AccountSummary.vue';
 import PortfolioChart from './components/PortfolioChart.vue';
 import PositionsList from './components/PositionsList.vue';
+import RecentActivities from './components/RecentActivities.vue';
 import { usePortfolio } from './composables/usePortfolio';
 
 const { data, loading, error, lastUpdated, fetchPortfolio, refreshPortfolio } = usePortfolio();
@@ -57,6 +58,12 @@ function formatLastUpdated(timestamp: string | null): string {
 
       <PositionsList 
         :positions="data?.positions || null" 
+        :loading="loading" 
+        :error="error" 
+      />
+
+      <RecentActivities 
+        :activities="data?.activities || null" 
         :loading="loading" 
         :error="error" 
       />

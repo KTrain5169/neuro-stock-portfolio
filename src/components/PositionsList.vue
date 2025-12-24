@@ -8,9 +8,11 @@
         <div class="table-header">
           <div class="col-symbol">Symbol</div>
           <div class="col-qty">Quantity</div>
-          <div class="col-price">Price</div>
-          <div class="col-value">Value</div>
-          <div class="col-change">Change</div>
+          <div class="col-price">Current Price</div>
+          <div class="col-value">Market Value</div>
+          <div class="col-basis">Cost Basis</div>
+          <div class="col-gain">Gain/Loss</div>
+          <div class="col-change">Change Today</div>
         </div>
         <div
           v-for="(position, index) in positions"
@@ -21,10 +23,14 @@
             <strong>{{ position.symbol || 'N/A' }}</strong>
           </div>
           <div class="col-qty">{{ position.qty || 0 }}</div>
-          <div class="col-price">${{ formatNumber(position.price || 0) }}</div>
-          <div class="col-value">${{ formatNumber(position.value || 0) }}</div>
-          <div class="col-change" :class="getChangeClass(position.change)">
-            {{ formatChange(position.change || 0) }}
+          <div class="col-price">${{ formatNumber(position.currentPrice || 0) }}</div>
+          <div class="col-value">${{ formatNumber(position.marketValue || 0) }}</div>
+          <div class="col-basis">${{ formatNumber(position.costBasis || 0) }}</div>
+          <div class="col-gain" :class="getGainLossClass(position)">
+            {{ formatGainLoss(position) }}
+          </div>
+          <div class="col-change" :class="getChangeClass(position.changeToday)">
+            {{ formatChangePercent(position.changeToday || 0) }}
           </div>
         </div>
       </div>
@@ -36,11 +42,12 @@
 <script setup lang="ts">
 interface Position {
   symbol?: string;
-  qty?: number;
-  price?: number;
-  value?: number;
-  change?: number;
-  changePercent?: number;
+  qty?: string | number;
+  marketValue?: string | number;
+  costBasis?: string | number;
+  currentPrice?: string | number;
+  lastdayPrice?: string | number;
+  changeToday?: string | number;
   [key: string]: any;
 }
 
@@ -52,18 +59,38 @@ interface Props {
 
 defineProps<Props>();
 
-function formatNumber(value: number): string {
-  return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function formatNumber(value: string | number): string {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatChange(change: number): string {
-  const prefix = change >= 0 ? '+' : '';
-  return `${prefix}$${formatNumber(Math.abs(change))}`;
+function formatChangePercent(change: string | number): string {
+  const num = typeof change === 'string' ? parseFloat(change) : change;
+  const percent = num * 100;
+  const prefix = percent >= 0 ? '+' : '';
+  return `${prefix}${percent.toFixed(2)}%`;
 }
 
-function getChangeClass(change?: number): string {
+function formatGainLoss(position: Position): string {
+  if (!position.marketValue || !position.costBasis) return '$0.00';
+  const market = typeof position.marketValue === 'string' ? parseFloat(position.marketValue) : position.marketValue;
+  const cost = typeof position.costBasis === 'string' ? parseFloat(position.costBasis) : position.costBasis;
+  const gain = market - cost;
+  const prefix = gain >= 0 ? '+' : '';
+  return `${prefix}$${formatNumber(Math.abs(gain))}`;
+}
+
+function getChangeClass(change?: string | number): string {
   if (!change) return '';
-  return change >= 0 ? 'positive' : 'negative';
+  const num = typeof change === 'string' ? parseFloat(change) : change;
+  return num >= 0 ? 'positive' : 'negative';
+}
+
+function getGainLossClass(position: Position): string {
+  if (!position.marketValue || !position.costBasis) return '';
+  const market = typeof position.marketValue === 'string' ? parseFloat(position.marketValue) : position.marketValue;
+  const cost = typeof position.costBasis === 'string' ? parseFloat(position.costBasis) : position.costBasis;
+  return market >= cost ? 'positive' : 'negative';
 }
 </script>
 
@@ -105,8 +132,8 @@ h2 {
 .table-header,
 .position-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1.5fr 1.5fr 1.5fr;
-  gap: 1rem;
+  grid-template-columns: 1.5fr 0.8fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr;
+  gap: 0.75rem;
   padding: 1rem 1.5rem;
   align-items: center;
 }
@@ -136,10 +163,13 @@ h2 {
 
 .col-qty,
 .col-price,
-.col-value {
+.col-value,
+.col-basis {
   color: #333;
+  font-size: 0.95rem;
 }
 
+.col-gain.positive,
 .col-change.positive {
   color: #228b22;
   font-weight: 600;
