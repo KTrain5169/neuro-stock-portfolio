@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import AccountSummary from './components/AccountSummary.vue';
 import PortfolioChart from './components/PortfolioChart.vue';
 import PositionsList from './components/PositionsList.vue';
@@ -9,22 +9,40 @@ import { usePortfolio } from './composables/usePortfolio';
 const { data, loading, error, lastUpdated, fetchPortfolio, refreshPortfolio } = usePortfolio();
 
 const isDarkMode = ref(false);
+const hasManualPreference = ref(false);
 
 onMounted(() => {
   fetchPortfolio();
 
   // Load dark mode preference from localStorage
   const savedMode = localStorage.getItem('darkMode');
-  if (savedMode) {
+  if (savedMode !== null) {
     isDarkMode.value = savedMode === 'true';
+    hasManualPreference.value = true;
   } else {
     // Check system preference
     isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    hasManualPreference.value = false;
   }
+
+  // Listen for system theme changes
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const handleThemeChange = (e: MediaQueryListEvent) => {
+    // Only auto-update if user hasn't manually set a preference
+    if (!hasManualPreference.value) {
+      isDarkMode.value = e.matches;
+    }
+  };
+
+  mediaQuery.addEventListener('change', handleThemeChange);
+
+  // Cleanup listener on unmount
+  onUnmounted(() => {
+    mediaQuery.removeEventListener('change', handleThemeChange);
+  });
 });
 
 watch(isDarkMode, (newValue) => {
-  localStorage.setItem('darkMode', String(newValue));
   if (newValue) {
     document.documentElement.classList.add('dark');
   } else {
@@ -39,6 +57,9 @@ function formatLastUpdated(timestamp: string | null): string {
 
 function toggleDarkMode() {
   isDarkMode.value = !isDarkMode.value;
+  // Mark as manual preference and save to localStorage
+  hasManualPreference.value = true;
+  localStorage.setItem('darkMode', String(isDarkMode.value));
 }
 </script>
 
