@@ -1,5 +1,5 @@
 <template>
-  <div class="positions-list">
+  <div class="positions-list" :class="{ dark }">
     <h2>Current Positions</h2>
     <div v-if="loading" class="loading">Loading positions...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
@@ -14,11 +14,7 @@
           <div class="col-gain">Gain/Loss</div>
           <div class="col-change">Change Today</div>
         </div>
-        <div
-          v-for="(position, index) in positions"
-          :key="index"
-          class="position-row"
-        >
+        <div v-for="(position, index) in positions" :key="index" class="position-row">
           <div class="col-symbol">
             <strong>{{ position.symbol || 'N/A' }}</strong>
           </div>
@@ -55,6 +51,7 @@ interface Props {
   positions: Position[] | null;
   loading?: boolean;
   error?: string | null;
+  dark?: boolean;
 }
 
 defineProps<Props>();
@@ -104,6 +101,10 @@ h2 {
   color: #333;
 }
 
+.dark h2 {
+  color: #e0e0e0;
+}
+
 .loading,
 .error,
 .no-data {
@@ -113,9 +114,20 @@ h2 {
   background: #f5f5f5;
 }
 
+.dark .loading,
+.dark .no-data {
+  background: #2d2d2d;
+  color: #aaa;
+}
+
 .error {
   background: #ffe0e0;
   color: #8b0000;
+}
+
+.dark .error {
+  background: #3d1f1f;
+  color: #ff6b6b;
 }
 
 .positions-container {
@@ -123,6 +135,11 @@ h2 {
   border-radius: 4px;
   border: 1px solid #ddd;
   overflow: hidden;
+}
+
+.dark .positions-container {
+  background: #2d2d2d;
+  border-color: #444;
 }
 
 .positions-table {
@@ -148,8 +165,18 @@ h2 {
   border-bottom: 2px solid #e0e0e0;
 }
 
+.dark .table-header {
+  background: #1f1f1f;
+  color: #aaa;
+  border-bottom-color: #555;
+}
+
 .position-row {
   border-bottom: 1px solid #f0f0f0;
+}
+
+.dark .position-row {
+  border-bottom-color: #3d3d3d;
 }
 
 .position-row:last-child {
@@ -161,12 +188,23 @@ h2 {
   font-size: 1.125rem;
 }
 
+.dark .col-symbol strong {
+  color: #ff6b9d;
+}
+
 .col-qty,
 .col-price,
 .col-value,
 .col-basis {
   color: #333;
   font-size: 0.95rem;
+}
+
+.dark .col-qty,
+.dark .col-price,
+.dark .col-value,
+.dark .col-basis {
+  color: #e0e0e0;
 }
 
 .col-gain.positive,
@@ -181,21 +219,22 @@ h2 {
 }
 
 @media (max-width: 768px) {
+
   .table-header,
   .position-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  
+
   .table-header {
     display: none;
   }
-  
+
   .position-row {
     padding: 1rem;
   }
-  
-  .position-row > div::before {
+
+  .position-row>div::before {
     content: attr(class);
     font-weight: 600;
     color: #666;

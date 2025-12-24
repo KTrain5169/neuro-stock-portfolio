@@ -20,6 +20,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root.dark {
+  color-scheme: dark;
+  color: #e0e0e0;
+  background-color: #1a1a1a;
+}
+
 body {
   margin: 0;
   display: flex;

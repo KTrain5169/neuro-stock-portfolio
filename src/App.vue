@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import AccountSummary from './components/AccountSummary.vue';
 import PortfolioChart from './components/PortfolioChart.vue';
 import PositionsList from './components/PositionsList.vue';
@@ -8,18 +8,42 @@ import { usePortfolio } from './composables/usePortfolio';
 
 const { data, loading, error, lastUpdated, fetchPortfolio, refreshPortfolio } = usePortfolio();
 
+const isDarkMode = ref(false);
+
 onMounted(() => {
   fetchPortfolio();
+
+  // Load dark mode preference from localStorage
+  const savedMode = localStorage.getItem('darkMode');
+  if (savedMode) {
+    isDarkMode.value = savedMode === 'true';
+  } else {
+    // Check system preference
+    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
 });
+
+watch(isDarkMode, (newValue) => {
+  localStorage.setItem('darkMode', String(newValue));
+  if (newValue) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+}, { immediate: true });
 
 function formatLastUpdated(timestamp: string | null): string {
   if (!timestamp) return 'Never';
   return new Date(timestamp).toLocaleString();
 }
+
+function toggleDarkMode() {
+  isDarkMode.value = !isDarkMode.value;
+}
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" :class="{ dark: isDarkMode }">
     <header class="header">
       <div class="header-content">
         <h1>Neuro Stock Exchange</h1>
@@ -27,11 +51,11 @@ function formatLastUpdated(timestamp: string | null): string {
           <div v-if="lastUpdated" class="last-updated">
             Last updated: {{ formatLastUpdated(lastUpdated) }}
           </div>
-          <button 
-            @click="refreshPortfolio" 
-            :disabled="loading"
-            class="refresh-btn"
-          >
+          <button @click="toggleDarkMode" class="dark-mode-btn"
+            :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+            {{ isDarkMode ? '☀️' : '🌙' }}
+          </button>
+          <button @click="refreshPortfolio" :disabled="loading" class="refresh-btn">
             {{ loading ? '⟳ Refreshing...' : 'Refresh' }}
           </button>
         </div>
@@ -44,33 +68,18 @@ function formatLastUpdated(timestamp: string | null): string {
         <button @click="fetchPortfolio" class="retry-btn">Retry</button>
       </div>
 
-      <AccountSummary 
-        :account="data?.account || null" 
-        :loading="loading" 
-        :error="error" 
-      />
+      <AccountSummary :account="data?.account || null" :loading="loading" :error="error" :dark="isDarkMode" />
 
-      <PortfolioChart 
-        :history="data?.history || null" 
-        :loading="loading" 
-        :error="error" 
-      />
+      <PortfolioChart :history="data?.history || null" :loading="loading" :error="error" :dark="isDarkMode" />
 
-      <PositionsList 
-        :positions="data?.positions || null" 
-        :loading="loading" 
-        :error="error" 
-      />
+      <PositionsList :positions="data?.positions || null" :loading="loading" :error="error" :dark="isDarkMode" />
 
-      <RecentActivities 
-        :activities="data?.activities || null" 
-        :loading="loading" 
-        :error="error" 
-      />
+      <RecentActivities :activities="data?.activities || null" :loading="loading" :error="error" :dark="isDarkMode" />
     </main>
 
     <footer class="footer">
-      <p><a href="https://github.com/KTrain5169/neuro-stock-portfolio" target="_blank">Source code</a> | This site is not affiliated with VedalAI.</p>
+      <p><a href="https://github.com/KTrain5169/neuro-stock-portfolio" target="_blank">Source code</a> | This site is
+        not affiliated with VedalAI.</p>
     </footer>
   </div>
 </template>
@@ -83,6 +92,10 @@ function formatLastUpdated(timestamp: string | null): string {
   background: #f0f0f0;
 }
 
+.app.dark {
+  background: #1a1a1a;
+}
+
 .header {
   background: #fff;
   border-bottom: 1px solid #ddd;
@@ -90,6 +103,11 @@ function formatLastUpdated(timestamp: string | null): string {
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.dark .header {
+  background: #2d2d2d;
+  border-bottom: 1px solid #444;
 }
 
 .header-content {
@@ -109,6 +127,10 @@ h1 {
   color: #8b0000;
 }
 
+.dark h1 {
+  color: #ff6b9d;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -118,6 +140,35 @@ h1 {
 .last-updated {
   font-size: 0.875rem;
   color: #666;
+}
+
+.dark .last-updated {
+  color: #aaa;
+}
+
+.dark-mode-btn {
+  padding: 0.5rem 0.75rem;
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.dark .dark-mode-btn {
+  background: #3d3d3d;
+  color: #fff;
+  border-color: #555;
+}
+
+.dark-mode-btn:hover {
+  background: #e0e0e0;
+}
+
+.dark .dark-mode-btn:hover {
+  background: #4d4d4d;
 }
 
 .refresh-btn {
@@ -133,6 +184,14 @@ h1 {
 
 .refresh-btn:hover:not(:disabled) {
   background: #c65d7f;
+}
+
+.dark .refresh-btn {
+  background: #a85577;
+}
+
+.dark .refresh-btn:hover:not(:disabled) {
+  background: #9a4d6d;
 }
 
 .refresh-btn:disabled {
@@ -160,6 +219,12 @@ h1 {
   border: 1px solid #db7093;
 }
 
+.dark .global-error {
+  background: #3d1f1f;
+  color: #ff6b6b;
+  border-color: #8b4d5d;
+}
+
 .retry-btn {
   padding: 0.5rem 1rem;
   background: #8b0000;
@@ -170,8 +235,16 @@ h1 {
   font-weight: 600;
 }
 
+.dark .retry-btn {
+  background: #a85577;
+}
+
 .retry-btn:hover {
   background: #6b0000;
+}
+
+.dark .retry-btn:hover {
+  background: #9a4d6d;
 }
 
 .footer {
@@ -181,6 +254,20 @@ h1 {
   text-align: center;
   color: #666;
   font-size: 0.875rem;
+}
+
+.dark .footer {
+  background: #2d2d2d;
+  border-top: 1px solid #444;
+  color: #aaa;
+}
+
+.dark .footer a {
+  color: #ff6b9d;
+}
+
+.dark .footer a:hover {
+  color: #ff8db3;
 }
 
 @media (max-width: 768px) {

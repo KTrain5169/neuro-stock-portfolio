@@ -1,16 +1,11 @@
 <template>
-  <div class="recent-activities">
+  <div class="recent-activities" :class="{ dark }">
     <h2>Recent Trading Activity</h2>
     <div v-if="loading" class="loading">Loading activities...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="activitiesArray && activitiesArray.length > 0" class="activities-container">
       <div class="activities-list">
-        <div
-          v-for="(activity, index) in activitiesArray"
-          :key="index"
-          class="activity-item"
-          :class="activity.side"
-        >
+        <div v-for="(activity, index) in activitiesArray" :key="index" class="activity-item" :class="activity.side">
           <div class="activity-header">
             <span class="symbol">{{ activity.symbol }}</span>
             <span class="side" :class="activity.side">{{ activity.side.toUpperCase() }}</span>
@@ -61,13 +56,14 @@ interface Props {
   activities: Record<string, Activity[]> | null;
   loading?: boolean;
   error?: string | null;
+  dark?: boolean;
 }
 
 const props = defineProps<Props>();
 
 const activitiesArray = computed(() => {
   if (!props.activities) return [];
-  
+
   const allActivities: Activity[] = [];
   for (const key in props.activities) {
     const activities = props.activities[key];
@@ -75,9 +71,9 @@ const activitiesArray = computed(() => {
       allActivities.push(...activities);
     }
   }
-  
+
   // Sort by transaction time, most recent first
-  return allActivities.sort((a, b) => 
+  return allActivities.sort((a, b) =>
     new Date(b.transaction_time).getTime() - new Date(a.transaction_time).getTime()
   ).slice(0, 10); // Show last 10 activities
 });
@@ -109,6 +105,10 @@ h2 {
   color: #333;
 }
 
+.dark h2 {
+  color: #e0e0e0;
+}
+
 .loading,
 .error,
 .no-data {
@@ -118,9 +118,20 @@ h2 {
   background: #f5f5f5;
 }
 
+.dark .loading,
+.dark .no-data {
+  background: #2d2d2d;
+  color: #aaa;
+}
+
 .error {
   background: #ffe0e0;
   color: #8b0000;
+}
+
+.dark .error {
+  background: #3d1f1f;
+  color: #ff6b6b;
 }
 
 .activities-container {
@@ -128,6 +139,11 @@ h2 {
   border-radius: 4px;
   border: 1px solid #ddd;
   overflow: hidden;
+}
+
+.dark .activities-container {
+  background: #2d2d2d;
+  border-color: #444;
 }
 
 .activities-list {
@@ -139,6 +155,10 @@ h2 {
 .activity-item {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #f0f0f0;
+}
+
+.dark .activity-item {
+  border-bottom-color: #3d3d3d;
 }
 
 .activity-item:last-child {
@@ -166,6 +186,10 @@ h2 {
   color: #db7093;
 }
 
+.dark .symbol {
+  color: #ff6b9d;
+}
+
 .side {
   padding: 0.25rem 0.75rem;
   border-radius: 4px;
@@ -190,6 +214,10 @@ h2 {
   color: #666;
 }
 
+.dark .time {
+  color: #aaa;
+}
+
 .activity-details {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -209,10 +237,18 @@ h2 {
   letter-spacing: 0.5px;
 }
 
+.dark .label {
+  color: #aaa;
+}
+
 .value {
   font-size: 0.95rem;
   font-weight: 600;
   color: #333;
+}
+
+.dark .value {
+  color: #e0e0e0;
 }
 
 .value.status {
@@ -224,12 +260,12 @@ h2 {
   .activity-header {
     flex-wrap: wrap;
   }
-  
+
   .time {
     margin-left: 0;
     width: 100%;
   }
-  
+
   .activity-details {
     grid-template-columns: 1fr 1fr;
   }

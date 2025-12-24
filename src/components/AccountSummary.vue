@@ -1,5 +1,5 @@
 <template>
-  <div class="account-summary">
+  <div class="account-summary" :class="{ dark }">
     <h2>Account Summary</h2>
     <div v-if="loading" class="loading">Loading account data...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
@@ -45,6 +45,7 @@ interface Props {
   account: Account | null;
   loading?: boolean;
   error?: string | null;
+  dark?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -80,17 +81,31 @@ h2 {
   color: #333;
 }
 
+.dark h2 {
+  color: #e0e0e0;
+}
+
 .loading,
 .error {
   padding: 2rem;
   text-align: center;
-  border-radius: 8px;
+  border-radius: 4px;
   background: #f5f5f5;
 }
 
+.dark .loading {
+  background: #2d2d2d;
+  color: #aaa;
+}
+
 .error {
-  background: #fee;
-  color: #c33;
+  background: #ffe0e0;
+  color: #8b0000;
+}
+
+.dark .error {
+  background: #3d1f1f;
+  color: #ff6b6b;
 }
 
 .summary-grid {
@@ -106,6 +121,11 @@ h2 {
   border: 1px solid #ddd;
 }
 
+.dark .summary-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
 .summary-card.gain-loss {
   grid-column: 1 / -1;
 }
@@ -118,15 +138,27 @@ h2 {
   letter-spacing: 0.5px;
 }
 
+.dark .label {
+  color: #aaa;
+}
+
 .value {
   font-size: 1.75rem;
   font-weight: 700;
   color: #333;
 }
 
+.dark .value {
+  color: #e0e0e0;
+}
+
 .value.primary {
   color: #db7093;
   font-size: 2rem;
+}
+
+.dark .value.primary {
+  color: #ff6b9d;
 }
 
 .value.positive {
