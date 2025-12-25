@@ -1,6 +1,12 @@
 <template>
   <div class="portfolio-chart" :class="{ dark }">
-    <h2>Portfolio History</h2>
+    <div class="chart-header">
+      <h2>Portfolio History</h2>
+      <button v-if="history && history.length > 0" @click="toggleDataPoints" class="toggle-points-btn"
+        :class="{ active: showDataPoints }">
+        {{ showDataPoints ? '● Hide Points' : '○ Show Points' }}
+      </button>
+    </div>
     <div v-if="loading" class="loading">Loading history data...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="history && history.length > 0" class="chart-container">
@@ -15,7 +21,8 @@
           stroke-linejoin="round" />
 
         <!-- Data points -->
-        <circle v-for="(point, i) in points" :key="`point-${i}`" :cx="point.x" :cy="point.y" r="4" class="data-point">
+        <circle v-if="showDataPoints" v-for="(point, i) in points" :key="`point-${i}`" :cx="point.x" :cy="point.y" r="4"
+          class="data-point">
           <title>{{ history && history[i] ? formatDate(history[i].timestamp) + ': $' + formatNumber(history[i].equity) :
             '' }}</title>
         </circle>
@@ -48,7 +55,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+
+const showDataPoints = ref(false);
+
+function toggleDataPoints() {
+  showDataPoints.value = !showDataPoints.value;
+}
 
 interface HistoryItem {
   timestamp: number;
@@ -129,13 +142,61 @@ function formatDate(timestamp: number): string {
   margin-bottom: 2rem;
 }
 
-h2 {
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+h2 {
+  margin: 0;
   color: #333;
 }
 
 .dark h2 {
   color: #e0e0e0;
+}
+
+.toggle-points-btn {
+  padding: 0.5rem 1rem;
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dark .toggle-points-btn {
+  background: #3d3d3d;
+  color: #aaa;
+  border-color: #555;
+}
+
+.toggle-points-btn:hover {
+  background: #e0e0e0;
+  border-color: #ccc;
+}
+
+.dark .toggle-points-btn:hover {
+  background: #4d4d4d;
+  border-color: #666;
+}
+
+.toggle-points-btn.active {
+  background: #db7093;
+  color: white;
+  border-color: #db7093;
+}
+
+.dark .toggle-points-btn.active {
+  background: #ff6b9d;
+  border-color: #ff6b9d;
 }
 
 .loading,

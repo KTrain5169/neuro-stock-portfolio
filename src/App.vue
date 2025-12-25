@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import AccountSummary from './components/AccountSummary.vue';
+import Banner from './components/Banner.vue';
 import PortfolioChart from './components/PortfolioChart.vue';
 import PositionsList from './components/PositionsList.vue';
 import RecentActivities from './components/RecentActivities.vue';
@@ -83,6 +84,10 @@ function toggleDarkMode() {
       </div>
     </header>
 
+    <div class="banner-container">
+      <Banner :dark="isDarkMode" />
+    </div>
+
     <main class="main-content">
       <div v-if="error && !loading" class="global-error">
         <strong>Error:</strong> {{ error }}
@@ -129,6 +134,13 @@ function toggleDarkMode() {
 .dark .header {
   background: #2d2d2d;
   border-bottom: 1px solid #444;
+}
+
+.banner-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .header-content {
@@ -313,6 +325,10 @@ h1 {
 
   .main-content {
     padding: 1rem;
+  }
+
+  .banner-container {
+    padding: 0 1rem;
   }
 }
 </style>
