@@ -25,8 +25,8 @@
           <div class="col-gain" :class="getGainLossClass(position)">
             {{ formatGainLoss(position) }}
           </div>
-          <div class="col-change" :class="getChangeClass(position.changeToday)">
-            {{ formatChangePercent(position.changeToday || 0) }}
+          <div class="col-change" :class="getChangeClass(getChangeTodayPercent(position))">
+            {{ formatChangePercent(getChangeTodayPercent(position)) }}
           </div>
         </div>
       </div>
@@ -64,8 +64,28 @@ function formatNumber(value: string | number): string {
 function formatChangePercent(change: string | number): string {
   const num = typeof change === 'string' ? parseFloat(change) : change;
   const percent = num * 100;
-  const prefix = percent >= 0 ? '+' : '';
+  const prefix = percent > 0 ? '+' : '';
   return `${prefix}${percent.toFixed(2)}%`;
+}
+
+function getChangeTodayPercent(position: Position): number {
+  // If changeToday is provided and not zero, use it
+  if (position.changeToday) {
+    const change = typeof position.changeToday === 'string' ? parseFloat(position.changeToday) : position.changeToday;
+    if (change !== 0) return change;
+  }
+
+  // Calculate from currentPrice and lastdayPrice if available
+  if (position.currentPrice && position.lastdayPrice) {
+    const current = typeof position.currentPrice === 'string' ? parseFloat(position.currentPrice) : position.currentPrice;
+    const lastday = typeof position.lastdayPrice === 'string' ? parseFloat(position.lastdayPrice) : position.lastdayPrice;
+
+    if (lastday !== 0) {
+      return (current - lastday) / lastday;
+    }
+  }
+
+  return 0;
 }
 
 function formatGainLoss(position: Position): string {
@@ -80,7 +100,8 @@ function formatGainLoss(position: Position): string {
 function getChangeClass(change?: string | number): string {
   if (!change) return '';
   const num = typeof change === 'string' ? parseFloat(change) : change;
-  return num >= 0 ? 'positive' : 'negative';
+  if (num === 0) return '';
+  return num > 0 ? 'positive' : 'negative';
 }
 
 function getGainLossClass(position: Position): string {
