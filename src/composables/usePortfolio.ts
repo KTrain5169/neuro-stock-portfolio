@@ -34,6 +34,23 @@ export function usePortfolio() {
     const error = ref<string | null>(null);
     const lastUpdated = ref<string | null>(null);
 
+    const ADJUSTMENT = 137.15;
+
+    function adjustPortfolioData(portfolioData: PortfolioData): PortfolioData {
+        return {
+            ...portfolioData,
+            account: {
+                ...portfolioData.account,
+                equity: (parseFloat(portfolioData.account.equity) - ADJUSTMENT).toFixed(2),
+                portfolioValue: (parseFloat(portfolioData.account.portfolioValue) - ADJUSTMENT).toFixed(2),
+            },
+            history: portfolioData.history.map(item => ({
+                ...item,
+                equity: item.equity - ADJUSTMENT,
+            })),
+        };
+    }
+
     async function fetchPortfolio() {
         loading.value = true;
         error.value = null;
@@ -46,7 +63,7 @@ export function usePortfolio() {
                 throw new Error(result.error || 'Failed to fetch portfolio data');
             }
 
-            data.value = result.data;
+            data.value = adjustPortfolioData(result.data);
             lastUpdated.value = result.lastUpdated || null;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -68,7 +85,7 @@ export function usePortfolio() {
                 throw new Error(result.error || 'Failed to refresh portfolio data');
             }
 
-            data.value = result.data;
+            data.value = adjustPortfolioData(result.data);
             lastUpdated.value = new Date().toISOString();
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Unknown error occurred';

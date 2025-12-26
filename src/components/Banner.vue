@@ -16,8 +16,8 @@ function dismissBanner() {
     <div v-if="!isDismissed" class="banner" :class="{ dark }">
         <div class="banner-message">
             <strong>Stock Skew</strong>
-            <span>Due to an unintended +$137 in Neuro's portfolio, the official display shows a slightly higher
-                number.</span>
+            <span>Due to an unintended +$137 in Neuro's portfolio, the official display may show slightly different
+                numbers.</span>
             <span>As this amount was left unused, this site does not account for that number.</span>
         </div>
         <button @click="dismissBanner" class="dismiss-btn" title="Dismiss banner">
